@@ -190,7 +190,10 @@ exports.searchCustomer = async (req, res) => {
     const { customer } = req.query;
     
     if (!customer) {
-      return ;
+      return res.status(200).json({
+        success: false,
+        data: null,
+      });
     }
 
     const regex = new RegExp(customer, "i"); // Case-insensitive regex search
@@ -198,7 +201,10 @@ exports.searchCustomer = async (req, res) => {
     const customers = await Customer.find({ customerName: { $regex: regex } });
 
     if (customers.length === 0) {
-      return;
+      return res.status(200).json({
+        success: false,
+        data: null,
+      });
     }
 
     res.status(200).json({

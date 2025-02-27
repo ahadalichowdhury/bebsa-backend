@@ -9,4 +9,5 @@ router.delete('/mobileAccounts/:id', mobileAccountController.deleteMobileAccount
 router.get('/mobileAccounts/today-log', mobileAccountController.getTodayLog);
 router.get('/mobileAccounts/company', mobileAccountController.getMobileAccountByCompany);
 router.get('/mobileAccounts/download-pdf', mobileAccountController.downloadAllMobileAccounts);
+router.get('/mobileAccounts/account-datas', mobileAccountController.getAccountDatas);
 module.exports = router;

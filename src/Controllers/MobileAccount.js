@@ -318,3 +318,49 @@ exports.getMobileAccountByCompany = async (req, res) => {
 };
 
 
+exports.getAccountDatas = async (req, res) => {
+    try {
+      const { page = 1, limit = 10, search = "" } = req.query; // Default values for pagination and search query
+  
+      // Pagination settings
+      const pageNumber = parseInt(page);
+      const pageSize = parseInt(limit);
+      const skip = (pageNumber - 1) * pageSize;
+  
+      // Create a filter based on search
+      let filter = {};
+      if (search) {
+        const regex = new RegExp(search.trim(), "i"); // Case-insensitive search
+        filter = {
+          $or: [{ selectCompany: regex }, { mobileNumber: regex }],
+        };
+      }
+  
+      // Query with filter, pagination, and sorting
+      const accounts = await MobileAccount.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize);
+  
+      // Count total matching customers for pagination metadata
+      const totalAccounts = await MobileAccount.countDocuments(filter);
+      
+      res.status(200).json({
+        success: true,
+        data: accounts,
+        pagination: {
+          totalRecords: totalAccounts,
+          totalPages: Math.ceil(totalAccounts / pageSize),
+          currentPage: pageNumber,
+          pageSize,
+        },
+      });
+    } catch (error) {
+    console.error("Error in getAccountDatas:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  };
+

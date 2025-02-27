@@ -28,7 +28,7 @@ const debitSchema = new mongoose.Schema({
     entryBy: {
         type: String,
         required: [true, 'Entry by user is required'],
-        enum: ['ahad', 'aditto'] // Only 2 users can make entries
+        enum: ['Rony', 'Rajib'] // Only 2 users can make entries
     },
     statement: {
         type: String,

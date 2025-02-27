@@ -37,7 +37,7 @@ exports.createDebit = async (req, res) => {
     }
 
     // Validate entryBy field
-    const allowedUsers = ["ahad", "aditto"];
+    const allowedUsers = ["Rony", "Rajib"];
     if (!allowedUsers.includes(entryBy.trim())) {
       return res.status(403).json({
         success: false,
@@ -120,7 +120,7 @@ exports.updateDebit = async (req, res) => {
       }
 
       // Validate entryBy field
-      const allowedUsers = ["ahad", "aditto"];
+      const allowedUsers = ["Rony", "Rajib"];
       if (!allowedUsers.includes(entryBy.trim())) {
           return res.status(403).json({
               success: false,

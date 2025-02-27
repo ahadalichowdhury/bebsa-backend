@@ -39,7 +39,7 @@ const creditSchema = new mongoose.Schema({
     entryBy: {
         type: String,
         required: [true, 'Entry by user is required'],
-        enum: ['ahad', 'aditto']
+        enum: ['Rony', 'Rajib']
     },
     statement: {
         type: String,

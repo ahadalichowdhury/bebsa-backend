@@ -46,7 +46,7 @@ exports.createCustomer = async (req, res) => {
       }
 
       // Validate entryBy field
-      const allowedUsers = ['ahad', 'aditto'];
+      const allowedUsers = ['Rony', 'Rajib'];
       if (!allowedUsers.includes(entryBy.trim())) {
           return res.status(403).json({
               success: false,
@@ -151,7 +151,7 @@ exports.updateCustomer = async (req, res) => {
         }
 
         // Validate entryBy field
-        const allowedUsers = ['ahad', 'aditto'];
+        const allowedUsers = ['Rony', 'Rajib'];
         if (!allowedUsers.includes(entryBy.trim())) {
             return res.status(403).json({
                 success: false,
@@ -270,16 +270,16 @@ exports.getPersonalCustomers = async (req, res) => {
   
         // Company filter logic
         if (entryBy) {
-            if (['ahad', 'aditto'].includes(entryBy)) {
+            if (['Rony', 'Rajib'].includes(entryBy)) {
                 query.entryBy = entryBy;
             } else {
                 return res.status(400).json({
                     success: false,
-                    message: 'Invalid company filter. Allowed values: ahad, aditto'
+                    message: 'Invalid company filter. Allowed values: Rony, Rajib'
                 });
             }
         } else {
-            query.entryBy = { $in: ['ahad', 'aditto'] };
+            query.entryBy = { $in: ['Rony', 'Rajib'] };
         }
   
         if (company) {
@@ -373,16 +373,16 @@ exports.downloadPdfCustomers = async (req, res) => {
   
         // Company filter logic
         if (entryBy) {
-            if (['ahad', 'aditto'].includes(entryBy)) {
+            if (['Rony', 'Rajib'].includes(entryBy)) {
                 query.entryBy = entryBy;
             } else {
                 return res.status(400).json({
                     success: false,
-                    message: 'Invalid company filter. Allowed values: ahad, aditto'
+                    message: 'Invalid company filter. Allowed values: Rony, Rajib'
                 });
             }
         } else {
-            query.entryBy = { $in: ['ahad', 'aditto'] };
+            query.entryBy = { $in: ['Rony', 'Rajib'] };
         }
   
         if (company) {

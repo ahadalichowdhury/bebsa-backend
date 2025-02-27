@@ -4,7 +4,8 @@ const {
     createCustomer,
     getPersonalCustomers ,
     updateCustomer,
-    deleteCustomer
+    deleteCustomer,
+    downloadPdfCustomers
 } = require('../Controllers/Credit');
 
 /**

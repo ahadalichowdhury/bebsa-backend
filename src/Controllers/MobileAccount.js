@@ -71,14 +71,15 @@ exports.getAllMobileAccounts = async (req, res) => {
       // Get total count for pagination
       const totalCount = await MobileAccount.countDocuments(query);
 
+      // Calculate total sum for all records (independent of pagination)
+      const allAccounts = await MobileAccount.find(query);
+      const totalSum = allAccounts.reduce((sum, account) => sum + account.totalAmount, 0);
+
       // Fetch accounts with pagination
       const accounts = await MobileAccount.find(query)
           .skip(skip)
           .limit(limit)
           .sort({ createdAt: -1 }); // Default sorting by newest
-
-      // Calculate total sum of totalAmount from the response data
-      const totalSum = accounts.reduce((sum, account) => sum + account.totalAmount, 0);
 
       // Calculate total pages
       const totalPages = Math.ceil(totalCount / limit);
@@ -105,6 +106,49 @@ exports.getAllMobileAccounts = async (req, res) => {
           error: error.message
       });
   }
+};
+
+exports.downloadAllMobileAccounts = async (req, res) => {
+    try {
+        // Date range filter
+        const { startDate, endDate } = req.query;
+        let query = {};
+  
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+  
+            start.setHours(0, 0, 0, 0); // Start of the day
+            end.setHours(23, 59, 59, 999); // End of the day
+  
+            query.createdAt = { $gte: start, $lte: end };
+        }
+  
+  
+        // Fetch accounts with pagination
+        const accounts = await MobileAccount.find(query)
+            .sort({ createdAt: -1 }); // Default sorting by newest
+  
+        // Calculate total sum of totalAmount from the response data
+        const totalSum = accounts.reduce((sum, account) => sum + account.totalAmount, 0);
+  
+  
+        res.status(200).json({
+            success: true,
+            message: "Mobile accounts retrieved successfully",
+            data: {
+                accounts,
+                totalSum,
+            }
+        });
+    } catch (error) {
+        console.error("Error fetching mobile accounts:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            error: error.message
+        });
+    }
 };
 
 

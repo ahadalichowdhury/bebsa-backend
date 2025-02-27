@@ -35,5 +35,11 @@ router.put('/credit/:id', updateCustomer);
  */
 router.delete('/credit/:id', deleteCustomer);
 
+/**
+ * @route   GET /api/customers/download-pdf
+ * @desc    Download PDF of customers
+ * @access  Private
+ */
+router.get('/credit/download-pdf', downloadPdfCustomers);
 
 module.exports = router; 

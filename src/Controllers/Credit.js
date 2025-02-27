@@ -362,5 +362,96 @@ exports.getPersonalCustomers = async (req, res) => {
     }
 };
 
+exports.downloadPdfCustomers = async (req, res) => {
+    try {
+        // Search and filter parameters
+        const { search, entryBy, company, sortBy, sortOrder, startDate, endDate } = req.query;
+  
+        // Base query for personal companies
+        let query = {};
+  
+        // Company filter logic
+        if (entryBy) {
+            if (['ahad', 'aditto'].includes(entryBy)) {
+                query.entryBy = entryBy;
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid company filter. Allowed values: ahad, aditto'
+                });
+            }
+        } else {
+            query.entryBy = { $in: ['ahad', 'aditto'] };
+        }
+  
+        if (company) {
+            if (['Bkash Personal', 'Nagad Personal'].includes(company)) {
+                query.company = company;
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid company filter. Allowed values: Bkash Personal, Nagad Personal'
+                });
+            }
+        } else {
+            query.company = { $in: ['Bkash Personal', 'Nagad Personal'] };
+        }
+  
+        // Add phone number search if provided
+        if (search) {
+            query.customerNumber = { $regex: search, $options: 'i' };
+        }
+  
+        // Date Range Filter
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+  
+            // Adjust the start and end dates to cover full days
+            start.setHours(0, 0, 0, 0); // Start of the day
+            end.setHours(23, 59, 59, 999); // End of the day
+  
+            // Apply the date filter
+            query.createdAt = { $gte: start, $lte: end };
+        }
+  
+        // Prepare sort options
+        const sortOptions = {};
+        if (sortBy) {
+            sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+        } else {
+            sortOptions.createdAt = -1; // Default sort by newest
+        }
+  
+        // Get total count for pagination
+        const totalCount = await Customer.countDocuments(query);
+  
+        // Execute main query with pagination
+        const customers = await Customer.find(query)
+            .populate('entryBy', 'name email');
+  
+        // Calculate the total sum of the `newAmount` field
+        const totalAmount = customers.reduce((sum, customer) => sum + customer.newAmount, 0);
+  
+  
+        res.status(200).json({
+            success: true,
+            message: 'Personal customers retrieved successfully',
+            data: {
+                customers,
+                totalAmount,
+            }
+        });
+  
+    } catch (error) {
+        console.error('Error in getPersonalCustomers:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error while fetching personal customers',
+            error: process.env.NODE_ENV === 'development' ? error.message : {}
+        });
+    }
+};
+
   
   

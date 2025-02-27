@@ -324,15 +324,16 @@ exports.getPersonalCustomers = async (req, res) => {
         // Get total count for pagination
         const totalCount = await Customer.countDocuments(query);
   
-        // Execute main query with pagination
+        // Calculate total amount independently (not affected by pagination)
+        const allCustomers = await Customer.find(query);
+        const totalAmount = allCustomers.reduce((sum, customer) => sum + (customer.newAmount || 0), 0);
+  
+        // Execute main query with pagination for the response
         const customers = await Customer.find(query)
             .sort(sortOptions)
             .skip(skip)
             .limit(limit)
             .populate('entryBy', 'name email');
-  
-        // Calculate the total sum of the `newAmount` field
-        const totalAmount = customers.reduce((sum, customer) => sum + customer.newAmount, 0);
   
         // Calculate pagination info
         const totalPages = Math.ceil(totalCount / limit);
@@ -342,7 +343,7 @@ exports.getPersonalCustomers = async (req, res) => {
             message: 'Personal customers retrieved successfully',
             data: {
                 customers,
-                totalAmount,  // Add the totalAmount field to the response
+                totalAmount,  // This now represents the total amount for all matching records
                 pagination: {
                     currentPage: page,
                     totalPages,

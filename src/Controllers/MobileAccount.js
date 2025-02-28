@@ -15,7 +15,14 @@ exports.createMobileAccount = async (req, res) => {
         }
 
         // Allowed companies
-        const allowedCompanies = ['Bkash Personal', 'Nagad Personal'];
+        const allowedCompanies = [
+          'Bkash Personal',
+          'Bkash Agent',
+          'Nagad Personal',
+          'Nagad Agent',
+          'Rocket Personal',
+          'Rocket Agent',
+        ]
         if (!allowedCompanies.includes(selectCompany.trim())) {
             return res.status(400).json({
                 success: false,
@@ -113,26 +120,26 @@ exports.downloadAllMobileAccounts = async (req, res) => {
         // Date range filter
         const { startDate, endDate } = req.query;
         let query = {};
-  
+
         if (startDate && endDate) {
             const start = new Date(startDate);
             const end = new Date(endDate);
-  
+
             start.setHours(0, 0, 0, 0); // Start of the day
             end.setHours(23, 59, 59, 999); // End of the day
-  
+
             query.createdAt = { $gte: start, $lte: end };
         }
-  
-  
+
+
         // Fetch accounts with pagination
         const accounts = await MobileAccount.find(query)
             .sort({ createdAt: -1 }); // Default sorting by newest
-  
+
         // Calculate total sum of totalAmount from the response data
         const totalSum = accounts.reduce((sum, account) => sum + account.totalAmount, 0);
-  
-  
+
+
         res.status(200).json({
             success: true,
             message: "Mobile accounts retrieved successfully",
@@ -321,12 +328,12 @@ exports.getMobileAccountByCompany = async (req, res) => {
 exports.getAccountDatas = async (req, res) => {
     try {
       const { page = 1, limit = 10, search = "" } = req.query; // Default values for pagination and search query
-  
+
       // Pagination settings
       const pageNumber = parseInt(page);
       const pageSize = parseInt(limit);
       const skip = (pageNumber - 1) * pageSize;
-  
+
       // Create a filter based on search
       let filter = {};
       if (search) {
@@ -335,16 +342,16 @@ exports.getAccountDatas = async (req, res) => {
           $or: [{ selectCompany: regex }, { mobileNumber: regex }],
         };
       }
-  
+
       // Query with filter, pagination, and sorting
       const accounts = await MobileAccount.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(pageSize);
-  
+
       // Count total matching customers for pagination metadata
       const totalAccounts = await MobileAccount.countDocuments(filter);
-      
+
       res.status(200).json({
         success: true,
         data: accounts,

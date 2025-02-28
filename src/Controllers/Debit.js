@@ -21,13 +21,14 @@ exports.createDebit = async (req, res) => {
 
     // Ensure company is valid
     const allowedCompanies = [
-      "Bkash Personal",
-      "Bkash Agent",
-      "Nagad Personal",
-      "Nagad Agent",
-      "Rocket Personal",
-      "Rocket Agent",
-    ];
+      'Bkash Personal',
+      'Bkash Agent',
+      'Nagad Personal',
+      'Nagad Agent',
+      'Rocket Personal',
+      'Rocket Agent',
+      'Others',
+    ]
     if (!allowedCompanies.includes(company.trim())) {
       return res.status(400).json({
         success: false,
@@ -104,13 +105,14 @@ exports.updateDebit = async (req, res) => {
 
       // Ensure company is valid
       const allowedCompanies = [
-          "Bkash Personal",
-          "Bkash Agent",
-          "Nagad Personal",
-          "Nagad Agent",
-          "Rocket Personal",
-          "Rocket Agent",
-      ];
+        'Bkash Personal',
+        'Bkash Agent',
+        'Nagad Personal',
+        'Nagad Agent',
+        'Rocket Personal',
+        'Rocket Agent',
+        'Others',
+      ]
       if (!allowedCompanies.includes(company.trim())) {
           return res.status(400).json({
               success: false,

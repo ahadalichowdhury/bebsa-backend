@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 const creditRoutes = require('./src/route/CreditRoute');
 const debitRoutes = require('./src/route/DebitRoute');
 const mobileAccountRoutes = require('./src/route/MobileAccountRoute');
-const customerRoutes = require('./src/route/customerRoute');
+const customerRoutes = require('./src/route/CustomerRoute');
 // Load environment variables
 dotenv.config();
 
@@ -60,4 +60,4 @@ app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports = app; 
+module.exports = app;

@@ -198,7 +198,10 @@ exports.searchCustomer = async (req, res) => {
 
     const regex = new RegExp(customer, "i"); // Case-insensitive regex search
 
-    const customers = await Customer.find({ customerName: { $regex: regex } });
+    const customers = await Customer.find({  $or: [
+      { customerName: { $regex: regex } },
+      { mobileNumber: { $regex: regex } }
+    ] });
 
     if (customers.length === 0) {
       return res.status(200).json({

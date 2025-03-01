@@ -5,7 +5,8 @@ const {
     getPersonalCustomers ,
     updateCustomer,
     deleteCustomer,
-    downloadPdfCustomers
+    downloadPdfCustomers,
+    getMobileAccountByCompany
 } = require('../Controllers/Credit');
 
 /**
@@ -42,5 +43,7 @@ router.delete('/credit/:id', deleteCustomer);
  * @access  Private
  */
 router.get('/credit/download-pdf', downloadPdfCustomers);
+
+router.get('/credit/account-datas',getMobileAccountByCompany );
 
 module.exports = router; 

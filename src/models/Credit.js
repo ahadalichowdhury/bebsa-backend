@@ -33,17 +33,13 @@ const creditSchema = new mongoose.Schema({
         default: 0
     },
     remarks: {
-        type: String,
+        type: Number,
         trim: true
     },
     entryBy: {
         type: String,
         required: [true, 'Entry by user is required'],
         enum: ['Rony', 'Rajib']
-    },
-    statement: {
-        type: String,
-        trim: true
     }
 }, {
     timestamps: true // This will add createdAt and updatedAt fields automatically

@@ -1,6 +1,6 @@
 const Customer = require('../models/Credit')
 const MobileAccount = require('../models/MobileAccount')
-
+const Debit = require('../models/Debit')
 exports.createCustomer = async (req, res) => {
   try {
     const {
@@ -8,7 +8,7 @@ exports.createCustomer = async (req, res) => {
       customerNumber,
       company,
       selectedAccount,
-      selectedNumber,
+      previousAmount,
       newAmount,
       remarks,
       entryBy, // Get entryBy from request body
@@ -19,7 +19,7 @@ exports.createCustomer = async (req, res) => {
     if (!customerName) missingFields.push('customerName')
     if (!customerNumber) missingFields.push('customerNumber')
     if (!company) missingFields.push('company')
-    if (!selectedNumber) missingFields.push('selectedNumber')
+    if (!previousAmount) missingFields.push('previousAmount')
     if (!entryBy) missingFields.push('entryBy') // Ensure entryBy is present
     if (!selectedAccount) missingFields.push('selectedAccount')
 
@@ -75,7 +75,7 @@ exports.createCustomer = async (req, res) => {
       customerNumber: customerNumber.trim(),
       company: company.trim(),
       selectedAccount: selectedAccount.trim(),
-      selectedNumber: selectedNumber.trim(),
+      previousAmount: previousAmount.trim(),
       newAmount: typeof newAmount === 'number' ? newAmount : 0,
       remarks: remarks ? remarks : 0,
       entryBy: entryBy.trim(), // Use entryBy from request body
@@ -115,7 +115,7 @@ exports.updateCustomer = async (req, res) => {
       customerNumber,
       company,
       selectedAccount,
-      selectedNumber,
+      previousAmount,
       newAmount,
       remarks,
       entryBy,
@@ -135,7 +135,7 @@ exports.updateCustomer = async (req, res) => {
       !customerName ||
       !customerNumber ||
       !company ||
-      !selectedNumber ||
+      !previousAmount ||
       !entryBy ||
       !selectedAccount
     ) {
@@ -146,7 +146,7 @@ exports.updateCustomer = async (req, res) => {
           'customerName',
           'customerNumber',
           'company',
-          'selectedNumber',
+          'previousAmount',
           'entryBy',
           'selectedAccount',
         ],
@@ -214,7 +214,7 @@ exports.updateCustomer = async (req, res) => {
     customer.customerNumber = customerNumber.trim()
     customer.company = company.trim()
     customer.selectedAccount = selectedAccount.trim()
-    customer.selectedNumber = selectedNumber.trim()
+    customer.previousAmount = previousAmount.trim()
     customer.newAmount =
       typeof newAmount === 'number' ? newAmount : customer.newAmount
     customer.remarks = remarks ? remarks : customer.remarks
@@ -284,28 +284,29 @@ exports.deleteCustomer = async (req, res) => {
 exports.getPersonalCustomers = async (req, res) => {
   try {
     // Pagination parameters
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const page = parseInt(req.query.page) || 1
+    const limit = parseInt(req.query.limit) || 10
+    const skip = (page - 1) * limit
 
     // Search and filter parameters
-    const { search, entryBy, company, sortBy, sortOrder, startDate, endDate } = req.query;
+    const { search, entryBy, company, sortBy, sortOrder, startDate, endDate } =
+      req.query
 
     // Base query for personal companies
-    let query = {};
+    let query = {}
 
     // Company filter logic
     if (entryBy) {
       if (['Rony', 'Rajib'].includes(entryBy)) {
-        query.entryBy = entryBy;
+        query.entryBy = entryBy
       } else {
         return res.status(400).json({
           success: false,
           message: 'Invalid company filter. Allowed values: Rony, Rajib',
-        });
+        })
       }
     } else {
-      query.entryBy = { $in: ['Rony', 'Rajib'] };
+      query.entryBy = { $in: ['Rony', 'Rajib'] }
     }
 
     if (company) {
@@ -320,13 +321,13 @@ exports.getPersonalCustomers = async (req, res) => {
           'Others',
         ].includes(company)
       ) {
-        query.company = company;
+        query.company = company
       } else {
         return res.status(400).json({
           success: false,
           message:
             'Invalid company filter. Allowed values: Bkash Personal, Nagad Personal or Rocket Personal ',
-        });
+        })
       }
     } else {
       query.company = {
@@ -339,61 +340,60 @@ exports.getPersonalCustomers = async (req, res) => {
           'Rocket Agent',
           'Others',
         ],
-      };
+      }
     }
 
     // Add phone number search if provided
     if (search) {
-      query.customerNumber = { $regex: search, $options: 'i' };
+      query.customerNumber = { $regex: search, $options: 'i' }
     }
 
     // Date Range Filter
     if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      const start = new Date(startDate)
+      const end = new Date(endDate)
 
       // Adjust the start and end dates to cover full days
-      start.setHours(0, 0, 0, 0); // Start of the day
-      end.setHours(23, 59, 59, 999); // End of the day
+      start.setHours(0, 0, 0, 0) // Start of the day
+      end.setHours(23, 59, 59, 999) // End of the day
 
       // Apply the date filter
-      query.createdAt = { $gte: start, $lte: end };
+      query.createdAt = { $gte: start, $lte: end }
     }
 
     // Prepare sort options
-    const sortOptions = {};
+    const sortOptions = {}
     if (sortBy) {
-      sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1
     } else {
-      sortOptions.createdAt = -1; // Default sort by newest
+      sortOptions.createdAt = -1 // Default sort by newest
     }
 
     // Get total count for pagination
-    const totalCount = await Customer.countDocuments(query);
+    const totalCount = await Customer.countDocuments(query)
 
     // Calculate total amount and total remarks
-    const allCustomers = await Customer.find(query);
+    const allCustomers = await Customer.find(query)
     const totalAmount = allCustomers.reduce(
       (sum, customer) => sum + (customer.newAmount || 0),
       0
-    );
+    )
 
     // Calculate total remarks
     const totalRemarks = allCustomers.reduce(
       (sum, customer) => sum + (customer.remarks || 0),
       0
-    );
-    
+    )
 
     // Execute main query with pagination for the response
     const customers = await Customer.find(query)
       .sort(sortOptions)
       .skip(skip)
       .limit(limit)
-      .populate('entryBy', 'name email');
+      .populate('entryBy', 'name email')
 
     // Calculate pagination info
-    const totalPages = Math.ceil(totalCount / limit);
+    const totalPages = Math.ceil(totalCount / limit)
 
     res.status(200).json({
       success: true,
@@ -409,17 +409,16 @@ exports.getPersonalCustomers = async (req, res) => {
           limit,
         },
       },
-    });
+    })
   } catch (error) {
-    console.error('Error in getPersonalCustomers:', error);
+    console.error('Error in getPersonalCustomers:', error)
     res.status(500).json({
       success: false,
       message: 'Internal server error while fetching personal customers',
       error: process.env.NODE_ENV === 'development' ? error.message : {},
-    });
+    })
   }
-};
-
+}
 
 exports.downloadPdfCustomers = async (req, res) => {
   try {
@@ -538,73 +537,112 @@ exports.downloadPdfCustomers = async (req, res) => {
 }
 
 exports.getMobileAccountByCompany = async (req, res) => {
-  console.log(req.query);
+  console.log(req.query)
   try {
     const {
-      selectCompany, // Should be company
+      selectCompany,
       selectedNumber,
       page = 1,
       limit = 10,
       startDate,
       endDate,
-    } = req.query;
+    } = req.query
 
     // Convert page & limit to numbers
-    const pageNumber = parseInt(page, 10) || 1;
-    const limitNumber = parseInt(limit, 10) || 10;
-    const skip = (pageNumber - 1) * limitNumber;
+    const pageNumber = parseInt(page, 10) || 1
+    const limitNumber = parseInt(limit, 10) || 10
+    const skip = (pageNumber - 1) * limitNumber
 
     // Build query object
-    let query = {};
-
+    let query = {}
     if (selectCompany) {
-      query.company = selectCompany; // Corrected field name
+      query.company = selectCompany
     }
-
     if (selectedNumber) {
-      query.selectedAccount = selectedNumber;
+      query.selectedAccount = selectedNumber
     }
 
     // Date range filtering
     if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      start.setHours(0, 0, 0, 0); // Start of the day
-      end.setHours(23, 59, 59, 999); // End of the day
-
-      query.createdAt = { $gte: start, $lte: end };
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      start.setHours(0, 0, 0, 0) // Start of the day
+      end.setHours(23, 59, 59, 999) // End of the day
+      query.createdAt = { $gte: start, $lte: end }
     }
 
-    // Get total count for pagination
-    const totalCount = await Customer.countDocuments(query); // Changed to 'Credit'
+    // Get total count for pagination from both collections
+    const totalCreditCount = await Customer.countDocuments(query)
+    const totalDebitCount = await Debit.countDocuments(query)
+    const totalRecords = totalCreditCount + totalDebitCount
 
-    // Fetch filtered and paginated results
-    const accounts = await Customer.find(query) // Changed to 'Credit'
-      .sort({ createdAt: -1 }) // Default sorting by newest
-      .skip(skip)
-      .limit(limitNumber);
+    // Fetch ALL results from both collections for balance calculation
+    // We need all transactions to calculate running balance correctly
+    let allCredits = await Customer.find(query).sort({ createdAt: 1 }) // Oldest first for calculation
+    let allDebits = await Debit.find(query).sort({ createdAt: 1 })
+
+    // Add isCredit field
+    const formattedCredits = allCredits.map((credit) => ({
+      ...credit.toObject(),
+      isCredit: true,
+    }))
+
+    const formattedDebits = allDebits.map((debit) => ({
+      ...debit.toObject(),
+      isCredit: false,
+    }))
+
+    // Merge and sort results by createdAt in ASCENDING order for balance calculation
+    let combinedResults = [...formattedCredits, ...formattedDebits].sort(
+      (a, b) => a.createdAt - b.createdAt
+    )
+
+    // Calculate running balance
+    let runningBalance = 0
+    combinedResults = combinedResults.map((transaction) => {
+      // Get amount - prefer newAmount if available
+      const amount = parseFloat(
+        transaction.newAmount || transaction.amount || 0
+      )
+
+      // Update running balance
+      if (transaction.isCredit) {
+        runningBalance += amount // Credit increases balance
+      } else {
+        runningBalance -= amount // Debit decreases balance
+      }
+
+      // Add balance to the transaction
+      return {
+        ...transaction,
+        balance: runningBalance,
+      }
+    })
+
+    // Now sort in DESCENDING order for display (newest first)
+    combinedResults.sort((a, b) => b.createdAt - a.createdAt)
+
+    // Apply pagination manually after merging and calculating
+    const paginatedResults = combinedResults.slice(skip, skip + limitNumber)
 
     // Calculate total pages
-    const totalPages = Math.ceil(totalCount / limitNumber);
+    const totalPages = Math.ceil(totalRecords / limitNumber)
 
     res.status(200).json({
       success: true,
-      data: accounts, // Always return an array, even if empty
+      data: paginatedResults, // Now includes balance field
       pagination: {
         currentPage: pageNumber,
         totalPages,
-        totalCount,
+        totalRecords,
         limit: limitNumber,
       },
-    });
+    })
   } catch (error) {
-    console.error("Error in getMobileAccountByCompany:", error);
+    console.error('Error in getMobileAccountByCompany:', error)
     res.status(500).json({
       success: false,
-      message: "Internal server error",
-    });
+      message: 'Internal server error',
+    })
   }
-};
-
-
+}

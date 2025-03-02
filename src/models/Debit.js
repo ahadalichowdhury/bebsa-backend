@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const debitSchema = new mongoose.Schema(
   {
@@ -26,6 +26,11 @@ const debitSchema = new mongoose.Schema(
       required: [true, 'Debit amount is required'],
       default: 0,
     },
+    currentAmount: {
+      type: Number,
+      required: [true, 'Current amount is required'],
+      default: 0,
+    },
     remarks: {
       type: String,
       trim: true,
@@ -35,16 +40,12 @@ const debitSchema = new mongoose.Schema(
       required: [true, 'Entry by user is required'],
       enum: ['Rony', 'Rajib'], // Only 2 users can make entries
     },
-    statement: {
-      type: String,
-      trim: true,
-    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields
   }
 )
 
-const Debit = mongoose.model('Debit', debitSchema);
+const Debit = mongoose.model('Debit', debitSchema)
 
-module.exports = Debit;
+module.exports = Debit

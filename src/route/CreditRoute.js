@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { 
-    createCustomer,
-    getPersonalCustomers ,
-    updateCustomer,
-    deleteCustomer,
-    downloadPdfCustomers,
-    getMobileAccountByCompany
-} = require('../Controllers/Credit');
+const {
+  createCustomer,
+  getPersonalCustomers,
+  updateCustomer,
+  deleteCustomer,
+  downloadPdfCustomers,
+  getMobileAccountByCompany,
+  getMobileAccountByCompanyDelete,
+} = require('../Controllers/Credit')
 
 /**
  * @route   POST /api/customers
@@ -46,4 +47,5 @@ router.get('/credit/download-pdf', downloadPdfCustomers);
 
 router.get('/credit/account-datas',getMobileAccountByCompany );
 
-module.exports = router; 
+router.post('/credit/statement-delete', getMobileAccountByCompanyDelete)
+module.exports = router;

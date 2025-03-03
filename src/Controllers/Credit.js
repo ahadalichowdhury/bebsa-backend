@@ -2,6 +2,7 @@ const Customer = require('../models/Credit')
 const MobileAccount = require('../models/MobileAccount')
 const Debit = require('../models/Debit')
 const Credit = require('../models/Credit')
+const mongoose = require('mongoose')
 exports.createCustomer = async (req, res) => {
   try {
     const {
@@ -91,7 +92,7 @@ exports.createCustomer = async (req, res) => {
     if (mobileAccount) {
       mobileAccount.totalAmount = (mobileAccount.totalAmount || 0) + newAmount
       //save total amount in credit schema also
-      newCustomer.totalBalance = (mobileAccount.totalAmount || 0)
+      newCustomer.totalBalance = mobileAccount.totalAmount || 0
       await newCustomer.save()
       await mobileAccount.save()
     }
@@ -571,8 +572,6 @@ exports.getMobileAccountByCompany = async (req, res) => {
 
     // Add isCredit field
 
-
-
     // Merge and sort results by createdAt in ASCENDING order for balance calculation
     let combinedResults = [...allCredits, ...allDebits].sort(
       (a, b) => a.createdAt - b.createdAt
@@ -596,35 +595,68 @@ exports.getMobileAccountByCompany = async (req, res) => {
 
 exports.getMobileAccountByCompanyDelete = async (req, res) => {
   try {
-    const { id } = req.params
-    const debitStatement = await Debit.findById(id)
-    const creditStatement = await Credit.findById(id)
+    const { id, isCredit, selectedCompany, selectedAccount } = req.body
+    console.log(id, isCredit, selectedCompany, selectedAccount)
 
-    if (debitStatement) {
-    }
-
-    if (!id) {
+    // Check if id exists and is a valid ObjectId
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid ID provided',
+        message: 'Invalid ID format',
       })
     }
 
-    const customer = await Customer.findByIdAndDelete(id)
+    if (isCredit) {
+      console.log(isCredit)
+      const credit = await Credit.findById(id)
+      if (!credit) {
+        return res.status(404).json({
+          success: false,
+          message: 'Credit not found',
+        })
+      }
 
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: 'Customer not found',
+      const account = await MobileAccount.findOne({
+        selectCompany: selectedCompany,
+        mobileNumber: selectedAccount,
       })
+
+      if (account) {
+        account.totalAmount -= credit.newAmount
+        await account.save()
+      }
+
+      // Use deleteOne() instead of remove()
+      await Credit.deleteOne({ _id: id })
+    } else {
+      const debit = await Debit.findById(id)
+      if (!debit) {
+        return res.status(404).json({
+          success: false,
+          message: 'Debit not found',
+        })
+      }
+
+      const account = await MobileAccount.findOne({
+        selectCompany: selectedCompany,
+        mobileNumber: selectedAccount,
+      })
+
+      if (account) {
+        account.totalAmount += debit.amount
+        await account.save()
+      }
+
+      // Use deleteOne() instead of remove()
+      await Debit.deleteOne({ _id: id })
     }
 
     res.status(200).json({
       success: true,
-      message: 'Customer deleted successfully',
+      message: 'Customer deleted successfully', // Note: Changed from res.message which might be undefined
     })
   } catch (error) {
-    console.error('Error in deleteMobileAccountByCompany:', error)
+    console.error('Error in getMobileAccountByCompanyDelete:', error)
     res.status(500).json({
       success: false,
       message: 'Internal server error',

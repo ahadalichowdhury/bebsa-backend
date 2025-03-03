@@ -1,6 +1,7 @@
 const Customer = require('../models/Credit')
 const MobileAccount = require('../models/MobileAccount')
 const Debit = require('../models/Debit')
+const Credit = require('../models/Credit')
 exports.createCustomer = async (req, res) => {
   try {
     const {
@@ -8,7 +9,7 @@ exports.createCustomer = async (req, res) => {
       customerNumber,
       company,
       selectedAccount,
-      previousAmount,
+      totalBalance,
       newAmount,
       remarks,
       entryBy, // Get entryBy from request body
@@ -19,7 +20,7 @@ exports.createCustomer = async (req, res) => {
     if (!customerName) missingFields.push('customerName')
     if (!customerNumber) missingFields.push('customerNumber')
     if (!company) missingFields.push('company')
-    if (!previousAmount) missingFields.push('previousAmount')
+    if (!totalBalance) missingFields.push('totalBalance')
     if (!entryBy) missingFields.push('entryBy') // Ensure entryBy is present
     if (!selectedAccount) missingFields.push('selectedAccount')
 
@@ -75,7 +76,7 @@ exports.createCustomer = async (req, res) => {
       customerNumber: customerNumber.trim(),
       company: company.trim(),
       selectedAccount: selectedAccount.trim(),
-      previousAmount: previousAmount.trim(),
+      totalBalance: totalBalance.trim(),
       newAmount: typeof newAmount === 'number' ? newAmount : 0,
       remarks: remarks ? remarks : 0,
       entryBy: entryBy.trim(), // Use entryBy from request body
@@ -83,6 +84,7 @@ exports.createCustomer = async (req, res) => {
 
     // Update mobile account total amount
     const mobileAccount = await MobileAccount.findOne({
+      selectCompany: company.trim(),
       mobileNumber: selectedAccount,
     })
     //   console.log(mobileAccount);
@@ -115,7 +117,7 @@ exports.updateCustomer = async (req, res) => {
       customerNumber,
       company,
       selectedAccount,
-      previousAmount,
+      totalBalance,
       newAmount,
       remarks,
       entryBy,
@@ -135,7 +137,7 @@ exports.updateCustomer = async (req, res) => {
       !customerName ||
       !customerNumber ||
       !company ||
-      !previousAmount ||
+      !totalBalance ||
       !entryBy ||
       !selectedAccount
     ) {
@@ -146,7 +148,7 @@ exports.updateCustomer = async (req, res) => {
           'customerName',
           'customerNumber',
           'company',
-          'previousAmount',
+          'totalBalance',
           'entryBy',
           'selectedAccount',
         ],
@@ -214,7 +216,7 @@ exports.updateCustomer = async (req, res) => {
     customer.customerNumber = customerNumber.trim()
     customer.company = company.trim()
     customer.selectedAccount = selectedAccount.trim()
-    customer.previousAmount = previousAmount.trim()
+    customer.totalBalance = totalBalance.trim()
     customer.newAmount =
       typeof newAmount === 'number' ? newAmount : customer.newAmount
     customer.remarks = remarks ? remarks : customer.remarks
@@ -537,21 +539,9 @@ exports.downloadPdfCustomers = async (req, res) => {
 }
 
 exports.getMobileAccountByCompany = async (req, res) => {
-  console.log(req.query)
+  // console.log(req.query)
   try {
-    const {
-      selectCompany,
-      selectedNumber,
-      page = 1,
-      limit = 10,
-      startDate,
-      endDate,
-    } = req.query
-
-    // Convert page & limit to numbers
-    const pageNumber = parseInt(page, 10) || 1
-    const limitNumber = parseInt(limit, 10) || 10
-    const skip = (pageNumber - 1) * limitNumber
+    const { selectCompany, selectedNumber, startDate, endDate } = req.query
 
     // Build query object
     let query = {}
@@ -570,11 +560,6 @@ exports.getMobileAccountByCompany = async (req, res) => {
       end.setHours(23, 59, 59, 999) // End of the day
       query.createdAt = { $gte: start, $lte: end }
     }
-
-    // Get total count for pagination from both collections
-    const totalCreditCount = await Customer.countDocuments(query)
-    const totalDebitCount = await Debit.countDocuments(query)
-    const totalRecords = totalCreditCount + totalDebitCount
 
     // Fetch ALL results from both collections for balance calculation
     // We need all transactions to calculate running balance correctly
@@ -622,24 +607,50 @@ exports.getMobileAccountByCompany = async (req, res) => {
     // Now sort in DESCENDING order for display (newest first)
     combinedResults.sort((a, b) => b.createdAt - a.createdAt)
 
-    // Apply pagination manually after merging and calculating
-    const paginatedResults = combinedResults.slice(skip, skip + limitNumber)
-
-    // Calculate total pages
-    const totalPages = Math.ceil(totalRecords / limitNumber)
-
     res.status(200).json({
       success: true,
       data: paginatedResults, // Now includes balance field
-      pagination: {
-        currentPage: pageNumber,
-        totalPages,
-        totalRecords,
-        limit: limitNumber,
-      },
     })
   } catch (error) {
     console.error('Error in getMobileAccountByCompany:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    })
+  }
+}
+
+exports.getMobileAccountByCompanyDelete = async (req, res) => {
+  try {
+    const { id } = req.params
+    const debitStatement = await Debit.findById(id)
+    const creditStatement = await Credit.findById(id)
+
+    if (debitStatement) {
+    }
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid ID provided',
+      })
+    }
+
+    const customer = await Customer.findByIdAndDelete(id)
+
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Customer not found',
+      })
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Customer deleted successfully',
+    })
+  } catch (error) {
+    console.error('Error in deleteMobileAccountByCompany:', error)
     res.status(500).json({
       success: false,
       message: 'Internal server error',

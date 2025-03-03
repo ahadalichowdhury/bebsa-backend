@@ -26,7 +26,7 @@ const debitSchema = new mongoose.Schema(
       required: [true, 'Debit amount is required'],
       default: 0,
     },
-    currentAmount: {
+    totalBalance: {
       type: Number,
       required: [true, 'Current amount is required'],
       default: 0,

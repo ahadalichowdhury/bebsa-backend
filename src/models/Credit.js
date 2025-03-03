@@ -22,7 +22,7 @@ const creditSchema = new mongoose.Schema({
         required: [true, 'Account selection is required'],
         trim: true
     },
-    previousAmount: {
+    totalBalance: {
         type: String,
         required: [true, 'Number selection is required'],
         trim: true

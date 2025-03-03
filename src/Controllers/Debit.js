@@ -6,7 +6,7 @@ exports.createDebit = async (req, res) => {
       company,
       selectedAccount,
       amount,
-      currentAmount,
+      totalBalance,
       remarks,
       entryBy,
     } = req.body
@@ -16,7 +16,7 @@ exports.createDebit = async (req, res) => {
     if (!company) missingFields.push('company')
     if (!selectedAccount) missingFields.push('selectedAccount')
     if (!entryBy) missingFields.push('entryBy')
-    if (!currentAmount) missingFields.push('currentAmount')
+    if (!totalBalance) missingFields.push('totalBalance')
 
     if (missingFields.length) {
       return res.status(400).json({
@@ -60,13 +60,14 @@ exports.createDebit = async (req, res) => {
       selectedAccount: selectedAccount.trim(),
       stockBalance: typeof stockBalance === 'number' ? stockBalance : 0,
       amount: typeof amount === 'number' ? amount : 0,
-      currentAmount: typeof currentAmount === 'number' ? currentAmount : 0,
+      totalBalance: typeof totalBalance === 'number' ? totalBalance : 0,
       remarks: remarks ? remarks.trim() : '',
       entryBy: entryBy.trim(),
     })
 
     // Update mobile account total amount
     const mobileAccount = await MobileAccount.findOne({
+      selectCompany: company.trim(),
       mobileNumber: selectedAccount,
     })
     console.log(mobileAccount)
@@ -98,7 +99,7 @@ exports.updateDebit = async (req, res) => {
       company,
       selectedAccount,
       amount,
-      currentAmount,
+      totalBalance,
       remarks,
       entryBy,
     } = req.body
@@ -108,7 +109,7 @@ exports.updateDebit = async (req, res) => {
     if (!company) missingFields.push('company')
     if (!selectedAccount) missingFields.push('selectedAccount')
     if (!entryBy) missingFields.push('entryBy')
-    if (!currentAmount) missingFields.push('currentAmount')
+    if (!totalBalance) missingFields.push('totalBalance')
     if (missingFields.length) {
       return res.status(400).json({
         success: false,
@@ -161,8 +162,8 @@ exports.updateDebit = async (req, res) => {
     existingDebit.company = company.trim()
     existingDebit.selectedAccount = selectedAccount.trim()
     existingDebit.amount = typeof amount === 'number' ? amount : 0
-    existingDebit.currentAmount =
-      typeof currentAmount === 'number' ? currentAmount : 0
+    existingDebit.totalBalance =
+      typeof totalBalance === 'number' ? totalBalance : 0
     existingDebit.remarks = remarks ? remarks.trim() : ''
     existingDebit.entryBy = entryBy.trim()
 

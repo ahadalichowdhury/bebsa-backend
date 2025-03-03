@@ -621,11 +621,14 @@ exports.getMobileAccountByCompanyDelete = async (req, res) => {
         mobileNumber: selectedAccount,
       })
 
-      if (account) {
-        account.totalAmount -= credit.newAmount
-        await account.save()
+      if (!account) {
+        return res.status(404).json({
+          success: false,
+          message: 'account not found',
+        })
       }
-
+      account.totalAmount -= credit.newAmount
+      await account.save()
       // Use deleteOne() instead of remove()
       await Credit.deleteOne({ _id: id })
     } else {
@@ -643,9 +646,13 @@ exports.getMobileAccountByCompanyDelete = async (req, res) => {
       })
 
       if (account) {
-        account.totalAmount += debit.amount
-        await account.save()
+        return res.status(404).json({
+          success: false,
+          message: 'account not found',
+        })
       }
+      account.totalAmount += debit.amount
+      await account.save()
 
       // Use deleteOne() instead of remove()
       await Debit.deleteOne({ _id: id })

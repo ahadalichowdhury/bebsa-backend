@@ -88,7 +88,7 @@ exports.getAllMobileAccounts = async (req, res) => {
     const accounts = await MobileAccount.find(query)
       .skip(skip)
       .limit(limit)
-      .sort({ createdAt: 1 }); // Default sorting by newest
+      .sort({ createdAt: 1 })
 
     // Calculate total pages
     const totalPages = Math.ceil(totalCount / limit);

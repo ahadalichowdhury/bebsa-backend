@@ -24,7 +24,6 @@ const creditSchema = new mongoose.Schema({
     },
     totalBalance: {
         type: String,
-        required: [true, 'Number selection is required'],
         trim: true
     },
     newAmount: {

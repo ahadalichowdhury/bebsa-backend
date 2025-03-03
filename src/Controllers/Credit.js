@@ -9,7 +9,7 @@ exports.createCustomer = async (req, res) => {
       customerNumber,
       company,
       selectedAccount,
-      totalBalance,
+      //totalBalance,
       newAmount,
       remarks,
       entryBy, // Get entryBy from request body
@@ -20,7 +20,7 @@ exports.createCustomer = async (req, res) => {
     if (!customerName) missingFields.push('customerName')
     if (!customerNumber) missingFields.push('customerNumber')
     if (!company) missingFields.push('company')
-    if (!totalBalance) missingFields.push('totalBalance')
+    //if (!totalBalance) missingFields.push('totalBalance')
     if (!entryBy) missingFields.push('entryBy') // Ensure entryBy is present
     if (!selectedAccount) missingFields.push('selectedAccount')
 
@@ -76,7 +76,6 @@ exports.createCustomer = async (req, res) => {
       customerNumber: customerNumber.trim(),
       company: company.trim(),
       selectedAccount: selectedAccount.trim(),
-      totalBalance: totalBalance.trim(),
       newAmount: typeof newAmount === 'number' ? newAmount : 0,
       remarks: remarks ? remarks : 0,
       entryBy: entryBy.trim(), // Use entryBy from request body
@@ -90,6 +89,9 @@ exports.createCustomer = async (req, res) => {
     //   console.log(mobileAccount);
     if (mobileAccount) {
       mobileAccount.totalAmount = (mobileAccount.totalAmount || 0) + newAmount
+      //save total amount in credit schema also
+      newCustomer.totalBalance = (mobileAccount.totalAmount || 0)
+      await newCustomer.save()
       await mobileAccount.save()
     }
 
@@ -582,34 +584,12 @@ exports.getMobileAccountByCompany = async (req, res) => {
       (a, b) => a.createdAt - b.createdAt
     )
 
-    // Calculate running balance
-    let runningBalance = 0
-    combinedResults = combinedResults.map((transaction) => {
-      // Get amount - prefer newAmount if available
-      const amount = parseFloat(
-        transaction.newAmount || transaction.amount || 0
-      )
-
-      // Update running balance
-      if (transaction.isCredit) {
-        runningBalance += amount // Credit increases balance
-      } else {
-        runningBalance -= amount // Debit decreases balance
-      }
-
-      // Add balance to the transaction
-      return {
-        ...transaction,
-        balance: runningBalance,
-      }
-    })
-
     // Now sort in DESCENDING order for display (newest first)
     combinedResults.sort((a, b) => b.createdAt - a.createdAt)
 
     res.status(200).json({
       success: true,
-      data: paginatedResults, // Now includes balance field
+      data: combinedResults, // Now includes balance field
     })
   } catch (error) {
     console.error('Error in getMobileAccountByCompany:', error)

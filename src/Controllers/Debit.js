@@ -6,7 +6,7 @@ exports.createDebit = async (req, res) => {
       company,
       selectedAccount,
       amount,
-      totalBalance,
+      //totalBalance,
       remarks,
       entryBy,
     } = req.body
@@ -16,7 +16,7 @@ exports.createDebit = async (req, res) => {
     if (!company) missingFields.push('company')
     if (!selectedAccount) missingFields.push('selectedAccount')
     if (!entryBy) missingFields.push('entryBy')
-    if (!totalBalance) missingFields.push('totalBalance')
+    //if (!totalBalance) missingFields.push('totalBalance')
 
     if (missingFields.length) {
       return res.status(400).json({
@@ -60,7 +60,7 @@ exports.createDebit = async (req, res) => {
       selectedAccount: selectedAccount.trim(),
       stockBalance: typeof stockBalance === 'number' ? stockBalance : 0,
       amount: typeof amount === 'number' ? amount : 0,
-      totalBalance: typeof totalBalance === 'number' ? totalBalance : 0,
+      //totalBalance: typeof totalBalance === 'number' ? totalBalance : 0,
       remarks: remarks ? remarks.trim() : '',
       entryBy: entryBy.trim(),
     })
@@ -73,6 +73,8 @@ exports.createDebit = async (req, res) => {
     console.log(mobileAccount)
     if (mobileAccount) {
       mobileAccount.totalAmount = (mobileAccount.totalAmount || 0) - amount
+      newDebit.totalBalance = mobileAccount.totalAmount || 0
+      await newDebit.save()
       await mobileAccount.save()
     }
 

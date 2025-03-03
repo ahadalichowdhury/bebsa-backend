@@ -79,6 +79,7 @@ exports.createCustomer = async (req, res) => {
       newAmount: typeof newAmount === 'number' ? newAmount : 0,
       remarks: remarks ? remarks : 0,
       entryBy: entryBy.trim(), // Use entryBy from request body
+      isCredit: true, // Assume customer has credit by default
     })
 
     // Update mobile account total amount
@@ -569,18 +570,11 @@ exports.getMobileAccountByCompany = async (req, res) => {
     let allDebits = await Debit.find(query).sort({ createdAt: 1 })
 
     // Add isCredit field
-    const formattedCredits = allCredits.map((credit) => ({
-      ...credit.toObject(),
-      isCredit: true,
-    }))
 
-    const formattedDebits = allDebits.map((debit) => ({
-      ...debit.toObject(),
-      isCredit: false,
-    }))
+
 
     // Merge and sort results by createdAt in ASCENDING order for balance calculation
-    let combinedResults = [...formattedCredits, ...formattedDebits].sort(
+    let combinedResults = [...allCredits, ...allDebits].sort(
       (a, b) => a.createdAt - b.createdAt
     )
 

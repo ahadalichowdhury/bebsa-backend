@@ -63,6 +63,7 @@ exports.createDebit = async (req, res) => {
       //totalBalance: typeof totalBalance === 'number' ? totalBalance : 0,
       remarks: remarks ? remarks.trim() : '',
       entryBy: entryBy.trim(),
+      isCredit: false,
     })
 
     // Update mobile account total amount

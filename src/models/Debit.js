@@ -40,6 +40,10 @@ const debitSchema = new mongoose.Schema(
       required: [true, 'Entry by user is required'],
       enum: ['Rony', 'Rajib'], // Only 2 users can make entries
     },
+    isCredit: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt fields

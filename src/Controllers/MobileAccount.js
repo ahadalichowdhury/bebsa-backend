@@ -355,7 +355,7 @@ exports.getAccountDatas = async (req, res) => {
 
     // Query with filter, pagination, and sorting
     const accounts = await MobileAccount.find(filter)
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .skip(skip)
       .limit(pageSize);
 

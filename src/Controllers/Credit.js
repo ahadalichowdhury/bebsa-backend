@@ -644,8 +644,9 @@ exports.getMobileAccountByCompanyDelete = async (req, res) => {
         selectCompany: selectedCompany,
         mobileNumber: selectedAccount,
       })
+      console.log(account)
 
-      if (account) {
+      if (!account) {
         return res.status(404).json({
           success: false,
           message: 'account not found',

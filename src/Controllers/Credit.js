@@ -289,10 +289,6 @@ exports.deleteCustomer = async (req, res) => {
 
 exports.getPersonalCustomers = async (req, res) => {
   try {
-    // Pagination parameters
-    const page = parseInt(req.query.page) || 1
-    const limit = parseInt(req.query.limit) || 10
-    const skip = (page - 1) * limit
 
     // Search and filter parameters
     const { search, entryBy, company, sortBy, sortOrder, startDate, endDate } =
@@ -367,13 +363,6 @@ exports.getPersonalCustomers = async (req, res) => {
       query.createdAt = { $gte: start, $lte: end }
     }
 
-    // Prepare sort options
-    const sortOptions = {}
-    if (sortBy) {
-      sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1
-    } else {
-      sortOptions.createdAt = -1 // Default sort by newest
-    }
 
     // Get total count for pagination
     const totalCount = await Customer.countDocuments(query)
@@ -393,13 +382,9 @@ exports.getPersonalCustomers = async (req, res) => {
 
     // Execute main query with pagination for the response
     const customers = await Customer.find(query)
-      .sort(sortOptions)
-      .skip(skip)
-      .limit(limit)
+      .sort({createdAt: -1})
       .populate('entryBy', 'name email')
 
-    // Calculate pagination info
-    const totalPages = Math.ceil(totalCount / limit)
 
     res.status(200).json({
       success: true,
@@ -408,12 +393,6 @@ exports.getPersonalCustomers = async (req, res) => {
         customers,
         totalAmount, // Total sum of newAmount
         totalRemarks, // Total count of remarks
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalCount,
-          limit,
-        },
       },
     })
   } catch (error) {

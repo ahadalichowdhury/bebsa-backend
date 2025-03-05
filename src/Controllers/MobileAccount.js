@@ -22,6 +22,7 @@ exports.createMobileAccount = async (req, res) => {
       "Nagad Agent",
       "Rocket Personal",
       "Rocket Agent",
+      "Others",
     ];
     if (!allowedCompanies.includes(selectCompany.trim())) {
       return res.status(400).json({
@@ -55,8 +56,6 @@ exports.createMobileAccount = async (req, res) => {
 
 exports.getAllMobileAccounts = async (req, res) => {
   try {
-
-
     // Date range filter
     const { startDate, endDate } = req.query;
     let query = {};
@@ -71,9 +70,6 @@ exports.getAllMobileAccounts = async (req, res) => {
       query.createdAt = { $gte: start, $lte: end };
     }
 
-    // Get total count for pagination
-    const totalCount = await MobileAccount.countDocuments(query);
-
     // Calculate total sum for all records (independent of pagination)
     const allAccounts = await MobileAccount.find(query);
     const totalSum = allAccounts.reduce(
@@ -84,8 +80,6 @@ exports.getAllMobileAccounts = async (req, res) => {
     // Fetch accounts with pagination
     const accounts = await MobileAccount.find(query)
       .sort({ createdAt: 1 })
-
-
 
     res.status(200).json({
       success: true,

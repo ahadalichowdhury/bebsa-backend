@@ -309,7 +309,13 @@ exports.getMobileAccountByCompany = async (req, res) => {
     }
 
     // Validate if selectCompany is one of the allowed values
-    const allowedCompanies = ["Bkash Personal", "Nagad Personal"];
+    const allowedCompanies = ['Bkash Personal',
+      'Bkash Agent',
+      'Nagad Personal',
+      'Nagad Agent',
+      'Rocket Personal',
+      'Rocket Agent',
+      'Others'];
     if (!allowedCompanies.includes(selectCompany)) {
       return res.status(400).json({
         success: false,

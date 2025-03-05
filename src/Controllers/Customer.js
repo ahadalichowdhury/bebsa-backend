@@ -44,12 +44,9 @@ exports.createCustomer = async (req, res) => {
 // Get all customers
 exports.getAllCustomers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "" } = req.query; // Default values for pagination and search query
+    const {search = "" } = req.query; // Default values for pagination and search query
 
-    // Pagination settings
-    const pageNumber = parseInt(page);
-    const pageSize = parseInt(limit);
-    const skip = (pageNumber - 1) * pageSize;
+ 
 
     // Create a filter based on search
     let filter = {};
@@ -63,8 +60,6 @@ exports.getAllCustomers = async (req, res) => {
     // Query with filter, pagination, and sorting
     const customers = await Customer.find(filter)
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(pageSize);
 
     // Count total matching customers for pagination metadata
     const totalCustomers = await Customer.countDocuments(filter);
@@ -72,12 +67,6 @@ exports.getAllCustomers = async (req, res) => {
     res.status(200).json({
       success: true,
       data: customers,
-      pagination: {
-        totalRecords: totalCustomers,
-        totalPages: Math.ceil(totalCustomers / pageSize),
-        currentPage: pageNumber,
-        pageSize,
-      },
     });
   } catch (error) {
     console.error("Error in getAllCustomers:", error);

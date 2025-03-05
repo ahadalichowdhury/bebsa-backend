@@ -312,36 +312,17 @@ exports.getPersonalCustomers = async (req, res) => {
     }
 
     if (company) {
-      if (
-        [
-          'Bkash Personal',
-          'Bkash Agent',
-          'Nagad Personal',
-          'Nagad Agent',
-          'Rocket Personal',
-          'Rocket Agent',
-          'Others',
-        ].includes(company)
-      ) {
+      if (['Bkash Personal', 'Nagad Personal'].includes(company)) {
         query.company = company
       } else {
         return res.status(400).json({
           success: false,
-          message:
-            'Invalid company filter. Allowed values: Bkash Personal, Nagad Personal or Rocket Personal ',
+          message: 'Invalid company filter. Allowed values: Bkash Personal, Nagad Personal',
         })
       }
     } else {
       query.company = {
-        $in: [
-          'Bkash Personal',
-          'Bkash Agent',
-          'Nagad Personal',
-          'Nagad Agent',
-          'Rocket Personal',
-          'Rocket Agent',
-          'Others',
-        ],
+        $in: ['Bkash Personal', 'Nagad Personal']
       }
     }
 
@@ -429,36 +410,17 @@ exports.downloadPdfCustomers = async (req, res) => {
     }
 
     if (company) {
-      if (
-        [
-          'Bkash Personal',
-          'Bkash Agent',
-          'Nagad Personal',
-          'Nagad Agent',
-          'Rocket Personal',
-          'Rocket Agent',
-          'Others',
-        ].includes(company)
-      ) {
+      if (['Bkash Personal', 'Nagad Personal'].includes(company)) {
         query.company = company
       } else {
         return res.status(400).json({
           success: false,
-          message:
-            'Invalid company filter. Allowed values: Bkash Personal, Nagad Personal',
+          message: 'Invalid company filter. Allowed values: Bkash Personal, Nagad Personal',
         })
       }
     } else {
       query.company = {
-        $in: [
-          'Bkash Personal',
-          'Bkash Agent',
-          'Nagad Personal',
-          'Nagad Agent',
-          'Rocket Personal',
-          'Rocket Agent',
-          'Others',
-        ],
+        $in: ['Bkash Personal', 'Nagad Personal']
       }
     }
 

@@ -55,10 +55,7 @@ exports.createMobileAccount = async (req, res) => {
 
 exports.getAllMobileAccounts = async (req, res) => {
   try {
-    // Pagination parameters
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+
 
     // Date range filter
     const { startDate, endDate } = req.query;
@@ -86,12 +83,9 @@ exports.getAllMobileAccounts = async (req, res) => {
 
     // Fetch accounts with pagination
     const accounts = await MobileAccount.find(query)
-      .skip(skip)
-      .limit(limit)
       .sort({ createdAt: 1 })
 
-    // Calculate total pages
-    const totalPages = Math.ceil(totalCount / limit);
+
 
     res.status(200).json({
       success: true,
@@ -99,12 +93,6 @@ exports.getAllMobileAccounts = async (req, res) => {
       data: {
         accounts,
         totalSum,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalCount,
-          limit,
-        },
       },
     });
   } catch (error) {
@@ -241,10 +229,7 @@ exports.getTodayLog = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Get pagination parameters from query, default values if not provided
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+  
 
     // Fetch debit and credit transactions separately
     const debits = await Debit.find({
@@ -267,24 +252,18 @@ exports.getTodayLog = async (req, res) => {
     // Sort by createdAt (latest first)
     transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    // Apply pagination (slice the sorted array)
-    const paginatedTransactions = transactions.slice(skip, skip + limit);
+
 
     res.status(200).json({
       success: true,
       message: "Today's transaction log retrieved successfully",
       data: {
-        transactions: paginatedTransactions,
+        transactions: transactions,
         summary: {
           totalDebit,
           totalCredit,
         },
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(transactions.length / limit),
-          totalTransactions: transactions.length,
-          limit,
-        },
+        
       },
     });
   } catch (error) {

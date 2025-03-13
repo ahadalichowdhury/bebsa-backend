@@ -24,8 +24,8 @@ exports.giveTransaction = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: 'User not found' })
 
-    // Calculate new balance
-    const newBalance = user.dueBalance - amount
+    // ✅ Fix: Increase dueBalance (not decrease)
+    const newBalance = user.dueBalance + amount
 
     // Create transaction
     const transaction = new Transaction({
@@ -59,7 +59,7 @@ exports.takeTransaction = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' })
 
     // Calculate new balance
-    const newBalance = user.dueBalance + amount
+    const newBalance = user.dueBalance - amount
 
     // Create transaction
     const transaction = new Transaction({

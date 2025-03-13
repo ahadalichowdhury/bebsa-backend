@@ -10,6 +10,8 @@ const debitRoutes = require('./src/route/DebitRoute');
 const mobileAccountRoutes = require('./src/route/MobileAccountRoute');
 const customerRoutes = require('./src/route/CustomerRoute');
 const userRoutes = require('./src/route/UserRoute');
+const transactionRoutes = require('./src/route/TransactionRoute')
+
 // Load environment variables
 dotenv.config();
 
@@ -33,6 +35,7 @@ app.use('/api', debitRoutes);
 app.use('/api', mobileAccountRoutes);
 app.use('/api', customerRoutes);
 app.use('/api', userRoutes);
+app.use('/api', transactionRoutes);
 // Base route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to Bebsa API' });

@@ -94,6 +94,10 @@ exports.createUserAndTransaction = async (req, res) => {
 
     // Check if user already exists
     let user = await User.findOne({ mobileNumber })
+    if (user) {
+      return res.status(400).json({ success: false, message: 'User with this mobile number already exists' })
+      // If user exists, update the total given/taken amount and save
+    }
 
     if (!user) {
       // Create new user if not found

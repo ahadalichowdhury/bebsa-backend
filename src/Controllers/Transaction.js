@@ -1,6 +1,5 @@
-const User = require("../models/DueUser")
-const Transaction = require("../models/Transaction")
-
+const User = require('../models/DueUser')
+const Transaction = require('../models/Transaction')
 
 /** 🔵 Get today's transaction history with total given and total taken */
 exports.getTodaysTransactionHistory = async (req, res) => {
@@ -16,29 +15,40 @@ exports.getTodaysTransactionHistory = async (req, res) => {
 
     // Fetch all transactions that occurred today
     const transactions = await Transaction.find({
-      date: { $gte: startOfDay, $lt: endOfDay }
-    }).sort({ date: 1 })
+      date: { $gte: startOfDay, $lt: endOfDay },
+    })
+      .sort({ date: 1 })
+      .populate('user')
+      .exec()
+    console.log(transactions)
 
     // If there are no transactions for today
     if (transactions.length === 0) {
-      return res.status(404).json({ message: 'No transactions found for today.' })
+      return res
+        .status(404)
+        .json({ message: 'No transactions found for today.' })
     }
 
     // Calculate total given and total taken for today's transactions
-    const totalGivenToday = transactions.reduce((sum, transaction) => sum + transaction.given, 0)
-    const totalTakenToday = transactions.reduce((sum, transaction) => sum + transaction.taken, 0)
+    const totalGivenToday = transactions.reduce(
+      (sum, transaction) => sum + transaction.given,
+      0
+    )
+    const totalTakenToday = transactions.reduce(
+      (sum, transaction) => sum + transaction.taken,
+      0
+    )
 
     // Send the response with transactions and total amounts
     res.json({
       transactions,
       totalGivenToday,
-      totalTakenToday
+      totalTakenToday,
     })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
-
 
 
 /** 🔵 Get all customers with transaction history (with search by name or number and total due balance calculation) */
@@ -51,28 +61,32 @@ exports.getAllCustomersWithTransactions = async (req, res) => {
       filter = {
         $or: [
           { name: { $regex: search, $options: 'i' } },
-          { mobileNumber: { $regex: search, $options: 'i' } }
-        ]
+          { mobileNumber: { $regex: search, $options: 'i' } },
+        ],
       }
     }
 
     const customers = await User.find(filter).lean()
     const customersWithTransactions = await Promise.all(
       customers.map(async (customer) => {
-        const transactions = await Transaction.find({ user: customer._id }).sort({ date: 1 })
+        const transactions = await Transaction.find({
+          user: customer._id,
+        }).sort({ date: 1 })
         return { ...customer, transactions }
       })
     )
 
     // Calculate total due balance based on filter
-    const totalDueBalance = customers.reduce((sum, customer) => sum + customer.dueBalance, 0)
+    const totalDueBalance = customers.reduce(
+      (sum, customer) => sum + customer.dueBalance,
+      0
+    )
 
     res.json({ totalDueBalance, customers: customersWithTransactions })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
-
 
 exports.createUserAndTransaction = async (req, res) => {
   try {
@@ -126,9 +140,8 @@ exports.createUserAndTransaction = async (req, res) => {
   }
 }
 
-
 /** 🔵 Get user by phone (with transaction history) */
- exports.getTransaction=async (req, res) => {
+exports.getTransaction = async (req, res) => {
   try {
     const user = await User.findOne({ mobileNumber: req.params.phone })
     if (!user) return res.status(404).json({ message: 'User not found' })
@@ -141,7 +154,7 @@ exports.createUserAndTransaction = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
- }
+}
 
 exports.giveTransaction = async (req, res) => {
   try {
@@ -175,7 +188,6 @@ exports.giveTransaction = async (req, res) => {
   }
 }
 
-
 /** 🔵 API to record "Take" transactions */
 exports.takeTransaction = async (req, res) => {
   try {
@@ -208,4 +220,3 @@ exports.takeTransaction = async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 }
-

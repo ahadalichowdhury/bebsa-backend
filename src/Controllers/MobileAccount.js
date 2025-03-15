@@ -116,7 +116,7 @@ exports.downloadAllMobileAccounts = async (req, res) => {
     }
 
     // Fetch accounts with pagination
-    const accounts = await MobileAccount.find(query).sort({ createdAt: -1 }); // Default sorting by newest
+    const accounts = await MobileAccount.find(query).sort({ createdAt: 1 }); // Default sorting by newest
 
     // Calculate total sum of totalAmount from the response data
     const totalSum = accounts.reduce(
@@ -223,7 +223,7 @@ exports.getTodayLog = async (req, res) => {
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
 
-  
+
 
     // Fetch debit and credit transactions separately
     const debits = await Debit.find({
@@ -257,7 +257,7 @@ exports.getTodayLog = async (req, res) => {
           totalDebit,
           totalCredit,
         },
-        
+
       },
     });
   } catch (error) {

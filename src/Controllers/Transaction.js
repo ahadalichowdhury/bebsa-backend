@@ -60,7 +60,7 @@ exports.getAllCustomersWithTransactions = async (req, res) => {
     if (search) {
       filter = {
         $or: [
-          { name: { $regex: search, $options: 'i' } },
+          { customerName: { $regex: search, $options: 'i' } },
           { mobileNumber: { $regex: search, $options: 'i' } },
         ],
       }
@@ -224,3 +224,127 @@ exports.takeTransaction = async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 }
+
+// 🔵 API to edit transaction
+exports.editTransaction = async (req, res) => {
+  try {
+    const { transactionId } = req.params
+    const { amount, notes, dicchi } = req.body // dicchi -> true for given, false for taken
+
+    // Find transaction
+    let transaction = await Transaction.findById(transactionId)
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' })
+
+    // Find user
+    let user = await User.findById(transaction.user)
+    if (!user) return res.status(404).json({ message: 'User not found' })
+
+    // Calculate the difference to adjust due balance
+    let difference = 0
+
+    if (dicchi) {
+      // Editing a "given" transaction
+      difference = amount - transaction.given
+      transaction.given = amount
+      transaction.taken = 0
+    } else {
+      // Editing a "taken" transaction
+      difference = transaction.taken - amount
+      transaction.given = 0
+      transaction.taken = amount
+    }
+
+    // Update balance in transaction and user
+    transaction.balance = user.dueBalance + difference
+    transaction.notes = notes || transaction.notes
+    await transaction.save()
+
+    user.dueBalance += difference
+    await user.save()
+
+    res.json({ success: true, message: 'Transaction updated successfully', transaction })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+}
+
+exports.deleteTransaction = async (req, res) => {
+  try {
+    const { transactionId } = req.params;
+
+    // Find the transaction
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) return res.status(404).json({ message: 'Transaction not found' });
+
+    // Find the user associated with this transaction
+    const user = await User.findById(transaction.user);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Reverse the transaction effect
+    if (transaction.given > 0) {
+      // Decrease dueBalance because user "gave" money
+      user.dueBalance -= transaction.given;
+      user.totalGiven -= transaction.given;
+    } else if (transaction.taken > 0) {
+      // Increase dueBalance because user "took" money
+      user.dueBalance += transaction.taken;
+      user.totalTaken -= transaction.taken;
+    }
+
+    // Ensure values don't go negative
+    user.totalGiven = Math.max(0, user.totalGiven);
+    user.totalTaken = Math.max(0, user.totalTaken);
+    user.dueBalance = Math.max(0, user.dueBalance); // Prevent negative balance
+
+    // Save the updated user before deleting transaction
+    await user.save();
+
+    // Delete the transaction
+    await transaction.deleteOne();
+
+    res.json({ success: true, message: 'Transaction deleted successfully', updatedUser: user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+
+/** 🔵 Update user details */
+exports.updateUser = async (req, res) => {
+  try {
+    const { name, mobileNumber } = req.body; // Fields to update
+    
+    const user = await User.findOne({ _id: req.params.userId });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Update fields
+    if (name) user.customerName = name;
+    if (mobileNumber) user.mobileNumber = mobileNumber;
+
+    await user.save();
+
+    res.json({ message: 'User updated successfully', user });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+/** 🔴 Delete user and their transactions */
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await User.findOne({ _id: req.params.userId });
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Delete all transactions related to this user
+    await Transaction.deleteMany({ user: user._id });
+
+    // Delete the user
+    await user.deleteOne();
+
+    res.json({ message: 'User and associated transactions deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

@@ -10,4 +10,9 @@ router.get('/transactions/:phone', transactionController.getTransaction)
 router.post('/transactions/give/:phone', transactionController.giveTransaction)
 router.post('/transactions/take/:phone', transactionController.takeTransaction)
 
+router.delete('/transactions/:transactionId', transactionController.deleteTransaction)
+router.put('/transactions/:transactionId', transactionController.editTransaction)
+router.delete('/transactions/users/:userId', transactionController.deleteUser)
+router.put('/transactions/users/:userId', transactionController.updateUser)
+
 module.exports = router

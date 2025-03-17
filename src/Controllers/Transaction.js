@@ -147,18 +147,32 @@ exports.createUserAndTransaction = async (req, res) => {
 /** 🔵 Get user by phone (with transaction history) */
 exports.getTransaction = async (req, res) => {
   try {
-    const user = await User.findOne({ mobileNumber: req.params.phone })
+    const { phone } = req.params
+    const { from, to } = req.query // Get date filters from query params
+
+    // Find user by mobile number
+    const user = await User.findOne({ mobileNumber: phone })
     if (!user) return res.status(404).json({ message: 'User not found' })
 
-    const transactions = await Transaction.find({ user: user._id }).sort({
-      date: 1,
-    })
+    // Create a filter object
+    let filter = { user: user._id }
+
+    // Apply date filters only if provided
+    if (from || to) {
+      filter.date = {}
+      if (from) filter.date.$gte = new Date(from) // Greater than or equal to 'from' date
+      if (to) filter.date.$lte = new Date(to) // Less than or equal to 'to' date
+    }
+
+    // Fetch transactions with optional date filter
+    const transactions = await Transaction.find(filter).sort({ date: 1 })
 
     res.json({ ...user.toObject(), transactions })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
+
 
 exports.giveTransaction = async (req, res) => {
   try {
@@ -313,7 +327,7 @@ exports.deleteTransaction = async (req, res) => {
 exports.updateUser = async (req, res) => {
   try {
     const { name, mobileNumber } = req.body; // Fields to update
-    
+
     const user = await User.findOne({ _id: req.params.userId });
 
     if (!user) return res.status(404).json({ message: 'User not found' });

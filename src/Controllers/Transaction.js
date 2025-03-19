@@ -165,16 +165,35 @@ exports.getTransaction = async (req, res) => {
       end.setHours(23, 59, 59, 999) // End of the day
       filter.date = { $gte: start, $lte: end }
     }
-    console.log(filter)
 
     // Fetch transactions with optional date filter
     const transactions = await Transaction.find(filter).sort({ date: 1 })
 
-    res.json({ ...user.toObject(), transactions })
+    // Calculate total given, total taken, and overall total
+    let totalGiven = 0
+    let totalTaken = 0
+
+    transactions.forEach((transaction) => {
+      totalGiven += transaction.given || 0
+      totalTaken += transaction.taken || 0
+    })
+
+    const total = totalGiven - totalTaken // Net balance
+
+    res.json({
+      ...user.toObject(),
+      transactions,
+      total: {
+        given: totalGiven,
+        taken: totalTaken,
+        total: total,
+      },
+    })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
+
 
 
 exports.giveTransaction = async (req, res) => {

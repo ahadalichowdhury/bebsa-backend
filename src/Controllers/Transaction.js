@@ -247,7 +247,8 @@ exports.editTransaction = async (req, res) => {
 
     // Find transaction
     let transaction = await Transaction.findById(transactionId)
-    if (!transaction) return res.status(404).json({ message: 'Transaction not found' })
+    if (!transaction)
+      return res.status(404).json({ message: 'Transaction not found' })
 
     // Find user
     let user = await User.findById(transaction.user)
@@ -259,11 +260,17 @@ exports.editTransaction = async (req, res) => {
     if (dicchi) {
       // Editing a "given" transaction
       difference = amount - transaction.given
+
+      // Adjust user's totalGiven
+      user.totalGiven = user.totalGiven - transaction.given + amount
       transaction.given = amount
       transaction.taken = 0
     } else {
       // Editing a "taken" transaction
       difference = transaction.taken - amount
+
+      // Adjust user's totalTaken
+      user.totalTaken = user.totalTaken - transaction.taken + amount
       transaction.given = 0
       transaction.taken = amount
     }
@@ -273,14 +280,20 @@ exports.editTransaction = async (req, res) => {
     transaction.notes = notes || transaction.notes
     await transaction.save()
 
+    // Adjust due balance
     user.dueBalance += difference
     await user.save()
 
-    res.json({ success: true, message: 'Transaction updated successfully', transaction })
+    res.json({
+      success: true,
+      message: 'Transaction updated successfully',
+      transaction,
+    })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 }
+
 
 exports.deleteTransaction = async (req, res) => {
   try {

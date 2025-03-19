@@ -158,11 +158,14 @@ exports.getTransaction = async (req, res) => {
     let filter = { user: user._id }
 
     // Apply date filters only if provided
-    if (from || to) {
-      filter.date = {}
-      if (from) filter.date.$gte = new Date(from) // Greater than or equal to 'from' date
-      if (to) filter.date.$lte = new Date(to) // Less than or equal to 'to' date
+    if (from && to) {
+      const start = new Date(from)
+      const end = new Date(to)
+      start.setHours(0, 0, 0, 0) // Start of the day
+      end.setHours(23, 59, 59, 999) // End of the day
+      filter.date = { $gte: start, $lte: end }
     }
+    console.log(filter)
 
     // Fetch transactions with optional date filter
     const transactions = await Transaction.find(filter).sort({ date: 1 })
